@@ -3,7 +3,7 @@
     pip install GauDLutils
     
 @author: Gauthierli
-@email: liwekang02@baidu.com
+@email: lwklxh@163.com
 @date: 2023-11-24
 
 Gusse what's this? 
