@@ -22,15 +22,17 @@ class MindMap2PPT(MindMapGenerator):
         """将脑图转为固定四层的一个脑图"""
         if node.level < 4 and node.children == []:
             node = self.expland(node, node.title, keep_level=False)
-            for child in node.children:
-                self.mmp2ppt_node(child)
+                
         if node.level > 4:
             pre_node = node.pre 
-            pre_node.remove(node)
+            pre_node.children = []
+            
+        for child in node.children:
+            self.mmp2ppt_node(child)
         return node 
     
     def expland_content_from_pptnode(self, node: Node) -> Node:
-        """根据四级标题扩写内容"""
+        """根据四级标题扩写内容, 需要一个返回值接收ppt字符串"""
         if node.level == 4:
             preview_info = []
             find_node = node 
@@ -54,15 +56,10 @@ class MindMap2PPT(MindMapGenerator):
         return node
     
     def mmp2ppt(self, root_node: Node) -> str:
+        """需要一个返回值接收ppt字符串"""
         ppt_node = self.mmp2ppt_node(root_node)
         expland_ppt_content_node = \
             self.expland_content_from_pptnode(ppt_node)
         return expland_ppt_content_node.str.replace('#### ', '- ')
             
     
-    
-    
-    
-    
-                        
-        
