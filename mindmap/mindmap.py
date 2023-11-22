@@ -1,5 +1,6 @@
 from .element import Node
 from typing import Literal
+from gutils import print_run_time
 
 class MindMapGenerator(object):
     def __init__(self, 
@@ -16,30 +17,40 @@ class MindMapGenerator(object):
         self.modified_prompt = modified_prompt
         self.expland_prompt = expland_prompt
     
-    def init_mindmap(self, text: str) -> Node:
+    @print_run_time
+    def init_mindmap(self, query: str) -> Node:
+        text = self.llm_api(self.init_prompt.format(query))
         if '* ' in text:
             text = self.markdown_style_transfer(text)
         if '-' in text:
             text = self.convert_dash_to_headline(text)
         root = None
         current_node = None
+        print(text)
         for line in text.split('\n'):
-            if line.strip():
-                level = line.count('#')
-                title = line.strip('# ').strip()
-                if title.endswith('<EOS>'):
-                    new_node = Node(title.strip('<EOS>'), level)
-                    new_node.explandable = False
-                else:
-                    new_node = Node(title, level)
-                
-                if level == 1:
-                    root = new_node
-                else:
-                    while current_node and current_node.level >= level:
-                        current_node = current_node.pre
-                    current_node.add_child(new_node)
-                current_node = new_node
+            if not line.startswith('#'):
+                continue
+            try:
+                if line.strip():
+                    level = line.count('#')
+                    title = line.strip('# ').strip()
+                    if title.endswith('<EOS>'):
+                        new_node = Node(title.strip('<EOS>'), level)
+                        # 是否需要设置叶子结点不可展开？？2PPT时候如果深度不够叶子结点也需要展开
+                        # new_node.explandable = False
+                    else:
+                        new_node = Node(title, level)
+                    
+                    if level == 1:
+                        root = new_node
+                    else:
+                        while current_node and current_node.level >= level:
+                            current_node = current_node.pre
+                        current_node.add_child(new_node)
+                    current_node = new_node
+            except Exception as e:
+                print(e)
+                print('line {} 解析失败'.format(line))
         return root
     
     def markdown_style_transfer(self, text: str) -> str:
@@ -58,6 +69,7 @@ class MindMapGenerator(object):
 
         return '\n'.join(converted_lines)
     
+    @print_run_time
     def convert_dash_to_headline(self, text: str) -> str:
         lines = text.split('\n')
         current_level = 0  # 当前标题的级别
@@ -75,6 +87,7 @@ class MindMapGenerator(object):
                 converted_lines.append(line)
         return '\n'.join(converted_lines)
     
+    @print_run_time
     def find_node(self, root: Node, title: str) -> Node:
         if root.title == title:
             return root
